@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screening</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #formContainer {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            flex-direction: column;
+        }
+        #messageBar {
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+        }
+        #formIframe {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+        }
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #overlayContent {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #startButton {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        #timer {
+            font-size:20px;
+            color:red;
+        }
+        #startButton{
+            background-color:rgb(205, 199, 199);
+            color:red;
+            font-weight: bolder;
+            border-top-right-radius: 30px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius:30px;
+            border-top-left-radius: 30px;
+            margin-top: 210px;
+        }
+        .inst{
+            margin-top:100px;
+            font-size: 30px;
+            justify-content:left;
+            align-content: left;
+            color:white
+        }
+        .note{
+            margin-left:350px;
+            color:white;
+            font-size: 30px;
+        }
+        body{
+            background-image: url("WhatsApp Image 2025-03-01 at 12.43.36 AM.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+    </style>
+    <script>
+        let formActive = true;
+        let formClosed = false;
+        let startTime;
+        const timeLimit = 1800 * 1000;
+        let hasStarted = false;
+
+        if (sessionStorage.getItem('formStarted')) {
+            document.write(`
+                <div id="overlay" style="display: flex;">
+                    <div id="overlayContent">
+                        <h2>Form Closed</h2>
+                        <p>This link has already been used. The form is permanently closed.</p>
+                    </div>
+                </div>
+            `);
+        } else {
+            function startForm() {
+                if (!hasStarted) {
+                    sessionStorage.setItem('formStarted', 'true');
+                    document.getElementById("startButton").style.display = "none";
+                    document.getElementById("formContainer").style.display = "flex";
+                    startTime = Date.now();
+                    updateTimer();
+                    setTimeout(closeFormDueToTimeout, timeLimit);
+                    hasStarted = true;
+                }
+            }
+
+            function closeFormDueToTimeout() {
+                if (!formClosed) {
+                    document.getElementById("formContainer").style.display = "none";
+                    document.getElementById("overlayContent").innerHTML = "<h2>Form Closed</h2><p>Form time limit exceeded. The form is now closed.</p>";
+                    document.getElementById("overlay").style.display = "flex";
+                    formClosed = true;
+                    formActive = false;
+                }
+            }
+
+            document.addEventListener("visibilitychange", function() {
+                if (document.hidden && formActive && !formClosed) {
+                    document.getElementById("overlay").style.display = "flex";
+                    formActive = false;
+                }
+            });
+
+            document.addEventListener("visibilitychange", function() {
+                if (!document.hidden && !formActive && !formClosed) {
+                    document.getElementById("formContainer").style.display = "none";
+                    document.getElementById("overlayContent").innerHTML = "<h2>Form Closed</h2><p>Tab switching is not allowed. The form is now closed.</p>";
+                    formClosed = true;
+                    document.getElementById("overlay").style.display = "flex";
+                }
+            });
+
+            function closeOverlay() {
+                document.getElementById("overlay").style.display = "none";
+            }
+
+            function updateTimer() {
+                if (startTime && !formClosed) {
+                    const elapsedTime = Date.now() - startTime;
+                    const remainingTime = Math.max(0, timeLimit - elapsedTime);
+                    const minutes = Math.floor(remainingTime / 60000);
+                    const seconds = Math.ceil((remainingTime % 60000) / 1000);
+                    document.getElementById("timer").textContent = `Time Remaining: ${minutes}m ${seconds}s`;
+                    setTimeout(updateTimer, 1000);
+                }
+            }
+            window.addEventListener('beforeunload', function (e) {
+              if (hasStarted && !formClosed) {
+                e.preventDefault();
+                e.returnValue = '';
+              }
+            });
+        }
+    </script>
+</head>
+<body>
+    <button id="startButton" onclick="startForm()">Start Form</button>
+
+    <div id="formContainer">
+        <div id="messageBar">
+            <span style="color: rgb(69, 69, 150); font-size:20px;">Please complete the form without switching tabs or refreshing.</span>
+            <span id="timer"></span>
+        </div>
+        <iframe id="formIframe" src="https://forms.gle/2nivSJnPdfGMWNvs5" width="100%" height="100%"></iframe>
+    </div>
+    <div id="overlay">
+        <div id="overlayContent">
+            <h2>Access Denied</h2>
+            <p>Tab switching or refreshing is not allowed. Please return to the form tab.</p>
+            <button onclick="closeOverlay()">OK</button>
+        </div>
+    </div>
+</body>
+</html>
