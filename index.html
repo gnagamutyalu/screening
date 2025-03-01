@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -81,7 +81,7 @@
             font-size: 30px;
         }
         body{
-            background-image: url("WhatsApp Image 2025-03-01 at 12.43.36 AM.jpg");
+            background-image: url(" Untitled design.png");
             background-repeat: no-repeat;
             background-size: cover;
         }
@@ -92,13 +92,14 @@
         let startTime;
         const timeLimit = 1800 * 1000;
         let hasStarted = false;
+        let tabSwitched = false;
 
         if (sessionStorage.getItem('formStarted')) {
             document.write(`
                 <div id="overlay" style="display: flex;">
                     <div id="overlayContent">
                         <h2>Form Closed</h2>
-                        <p>This link has already been used. The form is permanently closed.</p>
+                        <p>refreshing is not allow. The form is permanently closed.</p>
                     </div>
                 </div>
             `);
@@ -112,6 +113,7 @@
                     updateTimer();
                     setTimeout(closeFormDueToTimeout, timeLimit);
                     hasStarted = true;
+                    openFullscreen();
                 }
             }
 
@@ -122,6 +124,7 @@
                     document.getElementById("overlay").style.display = "flex";
                     formClosed = true;
                     formActive = false;
+                    closeFullscreen();
                 }
             }
 
@@ -129,15 +132,17 @@
                 if (document.hidden && formActive && !formClosed) {
                     document.getElementById("overlay").style.display = "flex";
                     formActive = false;
+                    tabSwitched = true;
                 }
             });
 
             document.addEventListener("visibilitychange", function() {
-                if (!document.hidden && !formActive && !formClosed) {
+                if (!document.hidden && !formActive && !formClosed && tabSwitched) {
                     document.getElementById("formContainer").style.display = "none";
                     document.getElementById("overlayContent").innerHTML = "<h2>Form Closed</h2><p>Tab switching is not allowed. The form is now closed.</p>";
                     formClosed = true;
                     document.getElementById("overlay").style.display = "flex";
+                    closeFullscreen();
                 }
             });
 
@@ -155,10 +160,34 @@
                     setTimeout(updateTimer, 1000);
                 }
             }
+            function openFullscreen() {
+              if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+              } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                document.documentElement.webkitRequestFullscreen();
+              } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                document.documentElement.msRequestFullscreen();
+              }
+            }
+
+            function closeFullscreen() {
+              if (document.exitFullscreen) {
+                document.exitFullscreen();
+              } else if (document.webkitExitFullscreen) { /* Safari */
+                document.webkitExitFullscreen();
+              } else if (document.msExitFullscreen) { /* IE11 */
+                document.msExitFullscreen();
+              }
+            }
             window.addEventListener('beforeunload', function (e) {
-              if (hasStarted && !formClosed) {
+              if (hasStarted && !formClosed && !tabSwitched) {
                 e.preventDefault();
-                e.returnValue = '';
+                document.getElementById("formContainer").style.display = "none";
+                document.getElementById("overlayContent").innerHTML = "<h2>Form Closed</h2><p>Refreshing the page is not allowed. The form is now closed.</p>";
+                document.getElementById("overlay").style.display = "flex";
+                formClosed = true;
+                formActive = false;
+                closeFullscreen();
               }
             });
         }
